@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Transcription Service</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 40px; background:#f7f9fc; }
+    h1 { color:#222; }
+    #transcript { width:80%; height:220px; margin:20px auto; padding:12px; border:2px solid #3b82f6; border-radius:8px; background:#fff; overflow:auto; text-align:left; white-space: pre-line; }
+    button { background:#3b82f6; color:#fff; padding:12px 20px; margin:6px; border:none; border-radius:6px; cursor:pointer; font-size:15px; }
+    button.secondary { background:#6b7280; }
+    #status { font-weight:600; color:#d97706; margin-top:10px; display:block; }
+  </style>
+</head>
+<body>
+  <h1>AI Transcription Service</h1>
+  <p> For Meeting and Conference</p>
+
+  <div id="transcript">Transcript will appear here...</div>
+
+  <button id="startBtn">Start</button>
+  <button id="stopBtn" class="secondary">Stop</button>
+
+  <div id="status">Status: Stopped</div>
+
+  <script>
+    let recognition, isRecognizing = false;
+    let currentSessionText = ""; 
+    const transcriptDiv = document.getElementById('transcript');
+    const statusDiv = document.getElementById('status');
+
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isRecognizing = true;
+        currentSessionText = ""; 
+        transcriptDiv.textContent += "\n\n"; // புதிய line session-க்கு
+        statusDiv.textContent = 'Status: Listening...';
+        statusDiv.style.color = '#059669';
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '', finalText = '';
+        for (let i = 0; i < event.results.length; i++) {
+          let transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += transcript + ' ';
+          else interim += transcript;
+        }
+        currentSessionText = finalText + interim;
+
+        // update only last line
+        let lines = transcriptDiv.textContent.split("\n\n");
+        lines[lines.length - 1] = currentSessionText.trim();
+        transcriptDiv.textContent = lines.join("\n\n");
+      };
+
+      recognition.onend = () => {
+        isRecognizing = false;
+        statusDiv.textContent = 'Status: Stopped';
+        statusDiv.style.color = '#b91c1c';
+      };
+
+      document.getElementById('startBtn').onclick = () => {
+        if (!isRecognizing) recognition.start();
+      };
+      document.getElementById('stopBtn').onclick = () => {
+        if (isRecognizing) recognition.stop();
+      };
+    } else {
+      alert('Speech Recognition not supported. Please use Google Chrome.');
+    }
+  </script>
+</body>
+</html>
